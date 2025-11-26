@@ -136,7 +136,7 @@ def fetch_weather_data(city_name):
         'pollution_response': pollution_response
     }
     st.session_state.search_performed = True
-    st.experimental_rerun() # 데이터 로드 후 화면 갱신
+    st.st.rerun() # 데이터 로드 후 화면 갱신
 
 # --- Streamlit 앱 시작 ---
 
@@ -310,3 +310,4 @@ else:
             fetch_weather_data(new_city_name_input)
         else:
             st.warning("도시 이름을 입력해 주세요.")
+
