@@ -13,8 +13,7 @@ AIR_URL = "http://api.openweathermap.org/data/2.5/air_pollution"
 
 
 #-----------------
-# 기본 매핑 테이블
-#-----------------
+
 
 weather_kr = {
     "clear sky": "맑음", "few clouds": "조금 구름",
@@ -37,8 +36,7 @@ weeks = {
 
 
 #-----------------
-# 유틸 함수
-#-----------------
+
 
 def has_kr(s):
     return any(0xAC00 <= ord(c) <= 0xD7A3 for c in s)
@@ -59,8 +57,7 @@ def init_state():
 
 
 #-----------------
-# 개선된 load_weather (자연스럽고 간결한 버전)
-#-----------------
+
 
 def load_weather(city):
     ss = st.session_state
@@ -107,9 +104,8 @@ def load_weather(city):
     st.rerun()
 
 
-#-----------------
-# 주간 요약 생성
-#-----------------
+#-----------------주간 요약
+
 
 def weekly_summary(df, air_quality):
     avg_max = df["최고"].mean()
@@ -142,9 +138,8 @@ def weekly_summary(df, air_quality):
     return "\n\n".join(msg)
 
 
-#-----------------
-# 초기 UI
-#-----------------
+#-----------------검색 ui
+
 
 init_state()
 
@@ -166,9 +161,8 @@ lat, lon = data["lat"], data["lon"]
 st.header(city)
 
 
-#-----------------
-# 데이터 정리
-#-----------------
+#-----------------오늘 날씨 데이터
+
 
 forecast_df = pd.DataFrame(weather["list"])
 
@@ -184,8 +178,7 @@ forecast_df = forecast_df[["dt", "temp", "feel", "low_temp", "high_temp", "icon"
 
 
 #-----------------
-# 일별 집계
-#-----------------
+
 
 daily_df = forecast_df.groupby(forecast_df["dt"].dt.date).agg(
     날짜=("dt", "first"),
@@ -201,9 +194,8 @@ daily_df["요일"] = daily_df["날짜"].dt.strftime("%a").map(weeks)
 daily_df.loc[0, "요일"] = "오늘"
 
 
-#-----------------
-# 현재 날씨
-#-----------------
+#-----------------# 현재 날씨
+
 
 current = weather["list"][0]
 temp_now = current["main"]["temp"]
@@ -232,9 +224,8 @@ with col2:
 st.divider()
 
 
-#-----------------
-# 시간별 예보
-#-----------------
+#-----------------시간별 예보
+
 
 tlist = weather["list"][:8]
 cols = st.columns(len(tlist))
@@ -255,9 +246,8 @@ for i, item in enumerate(tlist):
 st.divider()
 
 
-#-----------------
-# 미세먼지
-#-----------------
+#-----------------미세먼지
+
 
 st.subheader("미세먼지 농도")
 info = air_quality["list"][0]
@@ -272,9 +262,8 @@ st.write(f"PM2.5: {info['components'].get('pm2_5', 0):.1f}, "
 st.divider()
 
 
-#-----------------
-# 주간 표 렌더러
-#-----------------
+#-----------------주간 표
+
 
 def render_daily_row(row):
     cols = st.columns([1, 1, 1, 1, 1])
@@ -299,9 +288,8 @@ for _, row in daily_df.iterrows():
 st.divider()
 
 
-#-----------------
-# 날짜 축 라벨
-#-----------------
+#-----------------날짜 축 라벨
+
 
 unique_dates = sorted(forecast_df["dt"].dt.date.unique())
 tick_points = [datetime.datetime.combine(d, datetime.time(12)) for d in unique_dates]
@@ -315,9 +303,8 @@ for i, d in enumerate(unique_dates):
     tick_labels.append(label)
 
 
-#-----------------
-# 온도 변화 그래프
-#-----------------
+#-----------------그래프
+
 
 st.subheader("이번주 온도 변화")
 fig = go.Figure()
@@ -337,9 +324,8 @@ st.info(weekly_summary(daily_df, air_quality))
 st.divider()
 
 
-#-----------------
-# 다른 지역 조회
-#-----------------
+#-----------------다른 지역 조회
+
 
 st.subheader("다른 지역 조회")
 new_city = st.text_input("지역 입력", city)
@@ -347,3 +333,4 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
