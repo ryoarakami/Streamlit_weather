@@ -91,17 +91,17 @@ def weekly_summary(df, air):
     df["일교차"] = df["최고"] - df["최저"]
     d = df["일교차"].mean()
     if d >= 10:
-        msg.append(f"평균 일교차가 {d:.1f}°C로 큽니다. 아침/저녁 기온 변화에 주의하세요.")
+        msg.append(f"일교차가 {d:.1f}°C 폭으로 큽니다. 아침/저녁 기온 변화에 주의하세요.")
 
     rain_days = (df["강수"] >= 50).sum()
     if rain_days >= len(df) / 2:
-        msg.append("비 소식이 많은 주간입니다. 우산을 챙기세요.")
+        msg.append("비 소식이 많은 주간입니다. 우산을 챙겨가세요.")
 
     if air and "list" in air:
         aqi = air["list"][0]["main"]["aqi"]
         if aqi >= 3:
             txt, _ = AQI_TEXT.get(aqi, ("알 수 없음", ""))
-            msg.append(f"대기 질이 '{txt}' 수준입니다. 마스크 착용을 추천합니다.")
+            msg.append(f"미세먼지 농도가 {txt} 수준입니다. 마스크 착용을 권장합니다.")
 
     return "\n\n".join(msg)
 
@@ -307,6 +307,7 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
