@@ -156,7 +156,7 @@ daily = df.groupby(df["dt"].dt.date).agg(
     날짜=("dt", "first"),
     최고=("high_temp", "max"),
     최저=("low_temp", "min"),
-    대표=("icon", lambda x: x.mode()[0]),
+    아이콘=("icon", lambda x: x.mode()[0]),
     강수=("rainy", "mean")
 ).reset_index(drop=True)
 
@@ -235,7 +235,7 @@ def render_daily_row(row):
     cols = st.columns([1, 1, 1, 1, 1])
     cols[0].write(row["요일"])
     cols[1].write(f"{int(row['강수'])}%")
-    cols[2].image(f"http://openweathermap.org/img/wn/{fix_icon(row['대표'])}.png", width=35)
+    cols[2].image(f"http://openweathermap.org/img/wn/{fix_icon(row['아이콘'])}.png", width=35)
     cols[3].write(f"**{int(row['최고'])}°**")
     cols[4].write(f"{int(row['최저'])}°")
 
@@ -303,4 +303,5 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
