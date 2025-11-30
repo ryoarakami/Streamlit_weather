@@ -311,14 +311,14 @@ else:
                                    '내일' if x == today + datetime.timedelta(days=1) else 
                                    KOREAN_WEEKDAYS_MAP[x.weekday()])
 
-    # ★★★ 수정된 주간 날씨 테이블 헤더 (날씨, 최고/최저 온도 글자 크기 키움) ★★★
+    # ★★★ 수정된 주간 날씨 테이블 헤더 (모든 글자 크기 1.2em으로 통일) ★★★
     st.markdown(f"""
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 2px solid #333; margin-bottom: 5px; font-weight: bold; color: #000; font-size: 1.1em;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 2px solid #333; margin-bottom: 5px; font-weight: bold; color: #000; font-size: 1.2em;">
         <div style="width: 15%; text-align: center;">요일</div>
         <div style="width: 15%; text-align: center;">강수확률</div>
-        <div style="width: 20%; text-align: center; font-size: 1.2em;">날씨</div>
-        <div style="width: 25%; text-align: center; font-size: 1.2em;">최고 온도</div>
-        <div style="width: 25%; text-align: center; font-size: 1.2em;">최저 온도</div>
+        <div style="width: 20%; text-align: center;">날씨</div>
+        <div style="width: 25%; text-align: center;">최고 온도</div>
+        <div style="width: 25%; text-align: center;">최저 온도</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -332,7 +332,7 @@ else:
 
         avg_pop = row['평균강수확률']
         
-        # ★★★ 수정된 데이터 행 (아이콘 크기 키우고, 최저 온도 볼드체 및 글자 크기 키움) ★★★
+        # 데이터 행 (아이콘 크기 키우고, 최고/최저 온도 볼드체 및 글자 크기 1.2em 유지)
         st.markdown(f"""
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; color: #000; font-size: 1.1em;">
             <div style="width: 15%; font-weight: bold; text-align: center;">{day_label}</div>
