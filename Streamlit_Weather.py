@@ -248,11 +248,10 @@ for _, row in daily.iterrows():
     with c5: st.write(f"{int(row['최저'])}°")
 
 
-st.divider() #-----------------
+st.divider() #-----------------날짜 업데이트
 
 
 unique_dates = sorted(df["dt"].dt.date.unique())
-
 daily_tick_points = [
     datetime.datetime.combine(d, datetime.time(12))
     for d in unique_dates
@@ -302,6 +301,7 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
