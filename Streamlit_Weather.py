@@ -183,17 +183,17 @@ current_date_time = current_dt.strftime(f"%m/%d({day_name}), %H시")
 col1, col2 = st.columns([1,2])
 with col1:
     st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=100)
+    st.write(f"**{desc}**")
 with col2:
     st.markdown(f"### **{int(t)}°**")
-    st.write(f"**{desc}**")
-    col3, col4, col5 = st.columns([1, 1, 1])
-    
+    col3, col4 = st.columns([1, 1])
     with col3:
-        st.markdown(f"**$\u2191$ {int(today_max)}°**")
+        st.markdown(f"**↑ {int(today_max)}°**")
     with col4:
-        st.markdown(f"**$\u2193$ {int(today_min)}°**")
+        st.markdown(f"**↓ {int(today_min)}°**")
     st.write(f"**체감온도 {int(fl)}°**")
     st.write(f"**{current_date_time}**")
+
 
 
 st.divider() #-----------------오늘 시간별 날씨
@@ -302,6 +302,7 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
