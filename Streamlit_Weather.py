@@ -89,28 +89,28 @@ def weekly_summary(df, air):
     msg = []
 
     if avg_max >= 27:
-        msg.append("이번 주는 더운 편입니다. 시원한 복장을 추천합니다.")
+        msg.append("이번 주는 무더위가 예상돼요. 온열질환을 주의해주세요.")
     elif avg_max >= 16:
-        msg.append("날씨가 활동하기 좋습니다.")
+        msg.append("이번 주는 활동하기 좋은 날씨에요.")
     elif avg_max >= 5:
-        msg.append("날씨가 쌀쌀한 편입니다. 가벼운 외투를 챙기세요.")
+        msg.append("이번 주는 쌀쌀한 편입니다. 가벼운 외투를 챙겨가주세요.")
     else:
-        msg.append("추운 날씨가 예상됩니다. 따뜻하게 입으세요.")
+        msg.append("이번 주는 추운 날씨가 예상됩니다. 두꺼운 옷이 좋을거 같아요.")
 
     df["일교차"] = df["최고"] - df["최저"]
     d = df["일교차"].mean()
     if d >= 10:
-        msg.append(f"일교차가 {d:.1f}°C 폭으로 큽니다. 아침/저녁 기온 변화에 주의하세요.")
+        msg.append(f"일교차가 {d:.1f}°C 폭으로 큽니다. 아침/저녁 기온 변화에 주의해주세요.")
 
     rain_days = (df["강수"] >= 50).sum()
     if rain_days >= len(df) / 2:
-        msg.append("비 소식이 많은 주간입니다. 우산을 챙겨가세요.")
+        msg.append("비 소식이 많은 주간입니다. 우산을 챙겨가주세요.")
 
     if air and "list" in air:
         aqi = air["list"][0]["main"]["aqi"]
         if aqi >= 3:
             txt, _ = aqi_now.get(aqi)
-            msg.append(f"미세먼지 농도가 {txt} 수준입니다. 마스크 착용을 권장합니다.")
+            msg.append(f"미세먼지 농도가 {txt} 수준입니다. 마스크 착용을 권장드립니다.")
 
     return "\n\n".join(msg)
 
@@ -303,5 +303,6 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
