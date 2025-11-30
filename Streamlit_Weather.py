@@ -177,7 +177,7 @@ day_name = weeks.get(day_name_en, day_name_en)
 current_date_time = current_dt.strftime(f"%m/%d({day_name}), %H시")
 
 
-#-----------------
+#----------------- 현재 날씨씨
 
 
 col1, col2 = st.columns([1,2])
@@ -215,7 +215,7 @@ for i, item in enumerate(tlist):
             st.caption(f"💧 {int(p)}%")
 
 
-st.divider() #-----------------
+st.divider() #-----------------미세먼지
 
 
 st.subheader("미세먼지 농도")
@@ -228,7 +228,7 @@ st.write(f"AQI {em} | {txt}")
 st.write(f"PM2.5: {pm25:.1f}, PM10: {pm10:.1f}")
 
 
-st.divider() #-----------------
+st.divider() #-----------------이번주 날씨
 
 
 header_cols = st.columns([1, 1, 1, 1, 1])
@@ -238,7 +238,6 @@ with header_cols[2]: st.markdown("##### **날씨**")
 with header_cols[3]: st.markdown("##### **최고온도**")
 with header_cols[4]: st.markdown("##### **최저온도**")
 
-# --- 요일 컬럼: 단순화해서 한 번만 계산 (요청 반영)
 daily["요일"] = daily["날짜"].dt.strftime("%a").map(weeks)
 daily.loc[0, "요일"] = "오늘"
 
@@ -254,7 +253,6 @@ for _, row in daily.iterrows():
 st.divider() #-----------------
 
 
-# --- 그래프용 라벨(한글 요일, 첫 항목은 '오늘') ---
 daily_start = df.groupby(df['dt'].dt.date)['dt'].min().tolist()
 
 daily_labels_kr = []
@@ -304,6 +302,7 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
