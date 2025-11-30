@@ -61,11 +61,8 @@ def init_state():
 
 def load_weather(city):
     ss = st.session_state
-
-    # 한국어 지역명 → 자동 KR
     query = f"{city},KR" if has_kr(city) else city
 
-    # 위치 찾기
     geo = requests.get(
         GEO_URL,
         params={"q": query, "limit": 1, "appid": API_KEY}
@@ -80,19 +77,16 @@ def load_weather(city):
     lon = geo[0]["lon"]
     name_kr = geo[0].get("local_names", {}).get("ko", city)
 
-    # 날씨
     weather = requests.get(
         BASE_URL,
         params={"lat": lat, "lon": lon, "appid": API_KEY, "units": "metric", "lang": "en"}
     ).json()
 
-    # 대기질
     air_quality = requests.get(
         AIR_URL,
         params={"lat": lat, "lon": lon, "appid": API_KEY}
     ).json()
 
-    # 세션 저장
     ss.data = {
         "name": name_kr,
         "lat": lat,
@@ -194,7 +188,7 @@ daily_df["요일"] = daily_df["날짜"].dt.strftime("%a").map(weeks)
 daily_df.loc[0, "요일"] = "오늘"
 
 
-#-----------------# 현재 날씨
+#----------------- 현재 날씨
 
 
 current = weather["list"][0]
@@ -333,4 +327,5 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
