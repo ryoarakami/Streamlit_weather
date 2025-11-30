@@ -198,22 +198,35 @@ with col2:
 
 st.divider() #-----------------
 
+cols = st.columns(len(hourly))
 
-tlist = w["list"][:8]
-cols = st.columns(len(tlist), gap="small")
+for i, col in enumerate(cols):
+    with col:
+        # 1) 시각
+        st.markdown(f"### {hourly['시간'][i]}")
 
-for i, item in enumerate(tlist):
-    with cols[i]:
-        with st.container():
-            tt = pd.to_datetime(item["dt_txt"]).strftime("%H시")
-            ti = item["main"]["temp"]
-            p = item["pop"] * 100
-            ic = fix_icon(item["weather"][0]["icon"])
-            st.caption(f"{tt}")
-            st.image(f"http://openweathermap.org/img/wn/{ic}.png", width=40)
-            st.markdown(f"**{int(ti)}°**")
-            st.caption(f"💧 {int(p)}%")
-            
+        # 2) 위·아래 padding 추가 (정렬용)
+        st.write("")
+        st.write("")
+
+        # 3) 아이콘 (크기가 다를 때 세로 높이 맞추기)
+        st.image(hourly['아이콘경로'][i], width=40)
+
+        # 4) icon 아래 padding
+        st.write("")
+        
+        # 5) 기온
+        st.markdown(f"**{hourly['기온'][i]}°**")
+
+        # 6) 기온 아래 padding
+        st.write("")
+
+        # 7) 강수확률
+        st.markdown(f"{hourly['강수확률'][i]}%")
+
+        # 8) 마지막 padding
+        st.write("")
+
 
 st.divider() #-----------------
 
@@ -304,3 +317,4 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
