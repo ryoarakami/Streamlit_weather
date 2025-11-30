@@ -251,18 +251,20 @@ for _, row in daily.iterrows():
 st.divider() #-----------------
 
 
-daily_start = df.groupby(df['dt'].dt.date)['dt'].min().tolist()
+unique_dates = sorted(df["dt"].dt.date.unique())
+
+daily_tick_points = [
+    datetime.datetime.combine(d, datetime.time(12))
+    for d in unique_dates
+]
 
 daily_labels_kr = []
-for i, dt_value in enumerate(daily_start):
-    wd = pd.to_datetime(dt_value).strftime('%a')
-    wd_kr = weeks.get(wd, wd)
+for i, d in enumerate(unique_dates):
+    wd_en = d.strftime("%a")
+    wd_kr = weeks.get(wd_en, wd_en)
     if i == 0:
         wd_kr = "오늘"
     daily_labels_kr.append(wd_kr)
-
-unique_dates = sorted(df['dt'].dt.date.unique())
-daily_tick_points = [datetime.datetime.combine(d, datetime.time(12, 0)) for d in unique_dates]
 
 
 #-----------------
@@ -300,6 +302,7 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
