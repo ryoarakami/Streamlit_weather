@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import datetime
 
 # --- 설정 (변경 없음) ---
-API_KEY = "f2907b0b1e074198de1ba6fb1928665f"
+API_KEY = "f2907b0b1e074199de1ba6fb1928665f" # (가상의 키로 대체)
 
 BASE_URL = "http://api.openweathermap.org/data/2.5/forecast"
 GEO_URL = "http://api.openweathermap.org/geo/1.0/direct"
@@ -180,16 +180,16 @@ with col2:
         with col4:
             st.markdown(f"**$\u2193$ {int(today_min)}°**")
     
-    # 4. 체감온도 (굵기 통일 반영)
+    # 4. 체감온도
     st.write(f"**체감 {int(fl)}°**")
     
-    # 5. 날짜요일, 시간 (굵기 통일 반영)
+    # 5. 날짜요일, 시간
     st.write(f"**{current_date_time}**")
 
 st.divider() # 현재 날씨와 시간별 예보 구분
 
 
-# --- 시간별 예보 (가운데 정렬 수정) ---
+# --- 시간별 예보 (순수 Streamlit 위젯) ---
 st.subheader("시간별 예보")
 tlist = w["list"][:8]
 cols = st.columns(len(tlist))
@@ -201,17 +201,17 @@ for i, item in enumerate(tlist):
         p = item["pop"] * 100
         ic = fix_icon(item["weather"][0]["icon"])
         
-        # 1. 시간 (st.markdown을 사용해 가운데 정렬)
-        st.markdown(f"<div style='text-align: center; font-size: 0.9em;'>{tt}</div>", unsafe_allow_html=True)
+        # 1. 시간 (st.caption: 작은 글씨)
+        st.caption(tt)
         
-        # 2. 날씨 아이콘 (use_column_width="always"로 가운데 정렬 효과)
+        # 2. 날씨 아이콘 (use_column_width로 가운데 정렬 효과)
         st.image(f"http://openweathermap.org/img/wn/{ic}.png", width=50, use_column_width="always")
         
-        # 3. 온도 (st.markdown을 사용해 가운데 정렬 및 굵게 표시)
-        st.markdown(f"<div style='text-align: center; font-weight: bold;'>{int(ti)}°</div>", unsafe_allow_html=True)
+        # 3. 온도 (st.write와 볼드 마크다운)
+        st.write(f"**{int(ti)}°**")
         
-        # 4. 강수량 (💧 이모지와 함께, st.markdown을 사용해 가운데 정렬)
-        st.markdown(f"<div style='text-align: center; font-size: 0.9em;'>💧 {int(p)}%</div>", unsafe_allow_html=True)
+        # 4. 강수량 (st.caption: 작은 글씨)
+        st.caption(f"💧 {int(p)}%")
 
 st.divider() # 시간별 예보와 대기질 구분
 
@@ -268,7 +268,7 @@ daily_labels_kr = [weekday_map.get(d, d) for d in daily_labels_en]
 if daily_labels_kr:
     daily_labels_kr[0] = '오늘'
 
-# 각 날짜의 12:00를 tickvals로 사용하여 간격 조정
+# 각 날짜의 12:00를 tickvals로 사용
 unique_dates = sorted(df['dt'].dt.date.unique())
 daily_tick_points = [datetime.datetime.combine(d, datetime.time(12, 0)) for d in unique_dates]
 
@@ -277,7 +277,7 @@ fig = go.Figure()
 fig.add_trace(go.Scatter(x=df["dt"], y=df["temp"], mode="lines+markers", name="온도"))
 fig.add_trace(go.Scatter(x=df["dt"], y=df["feel"], mode="lines+markers", name="체감온도"))
 
-# Plotly 레이아웃 설정 (X축 수평, 요일 라벨, 간격 조정 적용)
+# Plotly 레이아웃 설정
 fig.update_layout(
     title={
         'text': "온도 변화", 
@@ -290,9 +290,9 @@ fig.update_layout(
     xaxis={
         'type': 'date', 
         'tickmode': 'array',
-        'tickvals': daily_tick_points, # 각 날짜의 정오를 라벨 위치로 사용
+        'tickvals': daily_tick_points, 
         'ticktext': daily_labels_kr,  
-        'tickangle': 0,               # 수평 표시
+        'tickangle': 0,               
         'showgrid': True,
         'zeroline': False,
         'rangeselector': None,        
@@ -324,4 +324,3 @@ st.divider() # 다른 지역 조회와 지도 구분
 # --- 지도 ---
 st.subheader("위치 지도")
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
-
