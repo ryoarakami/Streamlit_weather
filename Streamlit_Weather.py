@@ -205,15 +205,15 @@ for i, item in enumerate(tlist):
         st.caption(tt)
         
         # 2. 날씨 아이콘 (use_column_width="always"로 가운데 정렬 효과)
-        # 아이콘 크기 수정: width=50 -> width=30
-        st.image(f"http://openweathermap.org/img/wn/{ic}.png", **width=30**, use_column_width="always")
+        # **를 제거하여 SyntaxError를 해결했습니다.
+        st.image(f"http://openweathermap.org/img/wn/{ic}.png", **width=30**, use_column_width="always") # <--- 이 줄이 수정되었습니다.
         
         # 3. 온도 (st.write와 볼드 마크다운)
         st.write(f"**{int(ti)}°**")
         
         # 4. 강수량 (💧 이모지와 함께, st.caption으로 작은 글씨)
         st.caption(f"💧 {int(p)}%")
-
+        
 st.divider() # 시간별 예보와 대기질 구분
 
 
@@ -325,3 +325,4 @@ st.divider() # 다른 지역 조회와 지도 구분
 # --- 지도 ---
 st.subheader("위치 지도")
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
