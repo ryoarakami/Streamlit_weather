@@ -148,28 +148,65 @@ st.write(f"최고 {tmax:.0f}° / 최저 {tmin:.0f}°")
 st.write(f"체감온도 {fl:.0f}°")
 st.divider()
 
-# 시간별 예보
-st.subheader("시간별 예보")
-cols = st.columns(len(tlist))
+# 3. 시간별 예보
+st.markdown("### ⏰ 시간별 예보")
+forecast_list_24hr = data['list'][:8]
 
-for i, item in enumerate(tlist):
-    with cols[i]:
-        tt = pd.to_datetime(item["dt_txt"]).strftime("%H시")
-        ti = item["main"]["temp"]
-        p = item["pop"] * 100
-        ic = fix_icon(item["weather"][0]["icon"])
-        st.markdown(
-            f"""
-            <div style="text-align:center;">
-                <b>{tt}</b><br>
-                <img src="http://openweathermap.org/img/wn/{ic}.png" width="40"><br>
-                {ti:.0f}°<br>
-                💧 {p:.0f}%
+# 카드 그룹 전체 컨테이너
+st.markdown(
+    """
+    <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0;">
+    """,
+    unsafe_allow_html=True
+)
+
+for item in forecast_list_24hr:
+    time_str = (
+        pd.to_datetime(item['dt_txt'])
+        .tz_localize('UTC')
+        .tz_convert('Asia/Seoul')
+        .strftime('%H시')
+    )
+    temp = item['main']['temp']
+    weather_icon_code = normalize_icon_code(item['weather'][0]['icon'])
+    pop = item['pop'] * 100
+
+    # 카드 1개
+    st.markdown(
+        f"""
+        <div style="
+            flex: 1;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px 0;
+            text-align: center;
+            color: #000;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        ">
+            <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 6px;">
+                {time_str}
             </div>
-            """,
-            unsafe_allow_html=True
-        )
-st.divider()
+
+            <img src="http://openweathermap.org/img/wn/{weather_icon_code}.png"
+                 style="width: 45px; height: 45px; margin: 4px 0;" />
+
+            <div style="font-size: 1.1em; font-weight: bold; margin: 3px 0;">
+                {temp:.0f}°
+            </div>
+
+            <div style="font-size: 0.85em; color: #555;">
+                💧 {pop:.0f}%
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# 컨테이너 종료
+st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("---")
+
 
 # 미세먼지
 st.subheader("대기질")
@@ -241,3 +278,4 @@ if st.button("조회 다시"):
 
 st.subheader("위치 지도")
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
