@@ -166,4 +166,51 @@ df = pd.DataFrame([{
     "temp": x["main"]["temp"],
     "feel": x["main"]["feels_like"],
     "최저_raw": x["main"]["temp_min"],
-    "최고_raw": x["main"]()_
+    "최고_raw": x["main"]["temp_max"],
+    "icon": x["weather"][0]["icon"],
+    "강수": x["pop"] * 100
+} for x in w["list"]])
+
+daily = df.groupby(df["dt"].dt.date).agg(
+    날짜=("dt", "first"),
+    최고=("최고_raw", "max"),
+    최저=("최저_raw", "min"),
+    대표=("icon", lambda x: x.mode()[0]),
+    강수=("강수", "mean")
+).reset_index(drop=True)
+
+daily["요일"] = daily["날짜"].dt.strftime("%a").replace({
+    "Mon": "월", "Tue": "화", "Wed": "수",
+    "Thu": "목", "Fri": "금", "Sat": "토", "Sun": "일"
+})
+daily["요일"] = np.where(daily.index==0, "오늘", daily["요일"])
+
+# Streamlit만 사용해서 주간 예보 표시
+for _, row in daily.iterrows():
+    c1, c2, c3, c4, c5 = st.columns([1,1,1,1,1])
+    with c1: st.write(row["요일"])
+    with c2: st.write(f"💧 {int(row['강수'])}%")
+    with c3: st.image(f"http://openweathermap.org/img/wn/{fix_icon(row['대표'])}.png", width=40)
+    with c4: st.write(f"**{int(row['최고'])}°**")
+    with c5: st.write(f"{int(row['최저'])}°")
+
+# 그래프
+st.subheader("온도 변화")
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=df["dt"], y=df["temp"], mode="lines+markers", name="온도"))
+fig.add_trace(go.Scatter(x=df["dt"], y=df["feel"], mode="lines+markers", name="체감온도"))
+st.plotly_chart(fig, use_container_width=True)
+
+# 주간 조언
+st.subheader("주간 조언")
+st.info(weekly_summary(daily, air))
+
+# 다른 지역 조회
+st.subheader("다른 지역 조회")
+new_city = st.text_input("지역 입력", city)
+if st.button("조회 다시"):
+    load_weather(new_city)
+
+# 지도
+st.subheader("위치 지도")
+st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
