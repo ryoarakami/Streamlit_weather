@@ -68,7 +68,7 @@ def load_weather(city):
 
     ss.data = {"name": name_kr, "lat": lat, "lon": lon, "w": w, "air": air}
     ss.searched = True
-    st.experimental_rerun()
+    st.rerun()
 
 def weekly_summary(df, air):
     avg_max = df["최고"].mean()
@@ -265,3 +265,4 @@ if st.button("조회 다시"):
 # 지도
 st.subheader("위치 지도")
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
