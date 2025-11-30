@@ -62,7 +62,7 @@ def has_kr(s):
 
 def load_weather(city):
     ss = st.session_state
-    query = f"{city},KR" if has_kr(city) else city
+    query = city
 
     geo = requests.get(
         GEO_URL,
@@ -328,6 +328,7 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
