@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go # Plotly import
+import plotly.graph_objects as go 
 import datetime
 
 # OpenWeatherMap API 설정 및 URL
@@ -140,7 +140,7 @@ else:
     
     st.markdown("---")
     
-    # 2. 미세먼지 정보
+    # 2. 미세먼지 정보 (테두리 및 배경색 완전히 제거)
     st.markdown("### 💨 현재 대기 질 정보")
     if pollution_response and 'list' in pollution_response:
         current_air = pollution_response['list'][0]
@@ -149,7 +149,7 @@ else:
         components = current_air['components']
 
         st.markdown(f"""
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid #ccc; border-radius: 10px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px;">
             <div style="text-align: center;">
                 <p style="margin:0; font-size: 1.2em;">AQI {aqi_emoji}</p>
                 <p style="margin:0; font-weight: bold;">{aqi_status_kr}</p>
@@ -198,7 +198,8 @@ else:
     df_full = pd.DataFrame(
         [{
             '날짜/시간': pd.to_datetime(item['dt_txt']),
-            '요일': pd.to_datetime(item['dt_txt']).tz_localize('UTC').tz_convert('Asia/Seoul').strftime('%a'),
+            # 초기 요일 설정은 사용하지 않지만, 데이터프레임 구조를 위해 남겨둡니다.
+            '요일': pd.to_datetime(item['dt_txt']).tz_localize('UTC').tz_convert('Asia/Seoul').strftime('%a'), 
             '예상온도 (°C)': item['main']['temp'],
             '체감온도 (°C)': item['main']['feels_like'],
             '최저온도_raw': item['main']['temp_min'],
@@ -216,11 +217,18 @@ else:
         평균강수확률=('강수확률', np.mean)
     ).reset_index()
     
+    # 요일을 한글로 변환하는 맵 (월=0, 일=6)
+    KOREAN_WEEKDAYS_MAP = {
+        0: '월', 1: '화', 2: '수', 3: '목', 4: '금', 5: '토', 6: '일'
+    }
+    
     today = datetime.datetime.now().date()
+    
+    # '오늘', '내일'을 제외한 요일을 한글로 변환
     daily_summary['요일'] = daily_summary['날짜/시간'].apply(lambda x: 
                                     '오늘' if x == today else 
                                     '내일' if x == today + datetime.timedelta(days=1) else 
-                                    x.strftime('%a'))
+                                    KOREAN_WEEKDAYS_MAP[x.weekday()]) # .weekday()는 월(0)~일(6) 반환
 
     for index, row in daily_summary.iterrows():
         day_label = row['요일']
@@ -242,7 +250,7 @@ else:
         """, unsafe_allow_html=True)
         st.markdown("---")
     
-    # --- 6. 주간 날씨 그래프 (새로 추가, 지도 바로 위) ---
+    # --- 5. 5일 온도 변화 그래프 ---
     st.markdown("### 📈 5일 온도 변화 그래프")
     
     # Plotly Figure 생성
@@ -258,7 +266,7 @@ else:
     fig.update_layout(
         xaxis=dict(
             title="날짜/시간",
-            tickformat="%m-%d %H시", # 월-일 시간 포맷
+            tickformat="%m-%d %H시", 
             tickangle=0,
         ),
         yaxis_title="온도 (°C)",
@@ -270,14 +278,13 @@ else:
             xanchor="right",
             x=1
         ),
-        margin=dict(l=20, r=20, t=30, b=20) # 마진 조정
+        margin=dict(l=20, r=20, t=30, b=20)
     )
 
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("---")
-    # ---------------------------------------------
         
-    # 7. 현재 위치 지도 (그래프 바로 아래)
+    # 6. 현재 위치 지도
     lat = st.session_state.city_data['lat']
     lon = st.session_state.city_data['lon']
     
@@ -287,7 +294,7 @@ else:
     st.caption(f"**지도 중심 위치:** 위도 {lat:.2f}, 경도 {lon:.2f}")
     st.markdown("---")
 
-    # 8. 다른 지역 검색 (가장 마지막)
+    # 7. 다른 지역 검색
     st.markdown("### 📍 다른 지역 검색")
     
     new_city_name_input = st.text_input("새로운 지명 입력", display_city_name, key="new_city_input")
