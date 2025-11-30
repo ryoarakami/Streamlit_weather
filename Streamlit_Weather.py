@@ -14,7 +14,6 @@ AIR_URL = "http://api.openweathermap.org/data/2.5/air_pollution"
 
 #-----------------
 
-
 W_DESC = {
     "clear sky": "맑음", "few clouds": "조금 구름",
     "scattered clouds": "구름 많음", "broken clouds": "흐림",
@@ -160,6 +159,9 @@ daily = df.groupby(df["dt"].dt.date).agg(
     강수=("강수", "mean")
 ).reset_index(drop=True)
 
+# 날짜 컬럼을 datetime 타입으로 맞추기
+daily["날짜"] = pd.to_datetime(daily["날짜"])
+
 now = w["list"][0]
 t = now["main"]["temp"]
 fl = now["main"]["feels_like"]
@@ -198,7 +200,7 @@ st.divider() #-----------------
 
 
 tlist = w["list"][:8]
-cols = st.columns(len(tlist))
+cols = st.columns(len(tlist), gap="small")
 
 for i, item in enumerate(tlist):
     with cols[i]:
@@ -211,10 +213,9 @@ for i, item in enumerate(tlist):
             st.image(f"http://openweathermap.org/img/wn/{ic}.png", width=40)
             st.markdown(f"**{int(ti)}°**")
             st.caption(f"💧 {int(p)}%")
-
+            
 
 st.divider() #-----------------
-
 
 
 st.subheader("미세먼지 농도")
@@ -237,8 +238,9 @@ with header_cols[2]: st.markdown("##### **날씨**")
 with header_cols[3]: st.markdown("##### **최고온도**")
 with header_cols[4]: st.markdown("##### **최저온도**")
 
-daily["요일"] = daily["날짜"].dt.strftime("%a").map(weeks).fillna(daily["날짜"].dt.strftime("%a"))
-daily["요일"] = np.where(daily.index==0, "오늘", daily["요일"])
+# --- 요일 컬럼: 단순화해서 한 번만 계산 (요청 반영)
+daily["요일"] = daily["날짜"].dt.strftime("%a").map(weeks)
+daily.loc[0, "요일"] = "오늘"
 
 for _, row in daily.iterrows():
     c1, c2, c3, c4, c5 = st.columns([1,1,1,1,1])
@@ -252,11 +254,16 @@ for _, row in daily.iterrows():
 st.divider() #-----------------
 
 
+# --- 그래프용 라벨(한글 요일, 첫 항목은 '오늘') ---
 daily_start = df.groupby(df['dt'].dt.date)['dt'].min().tolist()
-daily_labels_en = [pd.to_datetime(dt).strftime('%a') for dt in daily_start]
-daily_labels_kr = [weeks.get(d, d) for d in daily_labels_en]
-if daily_labels_kr:
-    daily_labels_kr[0] = '오늘'
+
+daily_labels_kr = []
+for i, dt_value in enumerate(daily_start):
+    wd = pd.to_datetime(dt_value).strftime('%a')
+    wd_kr = weeks.get(wd, wd)
+    if i == 0:
+        wd_kr = "오늘"
+    daily_labels_kr.append(wd_kr)
 
 unique_dates = sorted(df['dt'].dt.date.unique())
 daily_tick_points = [datetime.datetime.combine(d, datetime.time(12, 0)) for d in unique_dates]
@@ -297,14 +304,3 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
-
-
-
-
-
-
-
-
-
-
-
