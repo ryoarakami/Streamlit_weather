@@ -281,13 +281,8 @@ fig.update_layout(
         'tickmode': 'array',
         'tickvals': daily_tick_points,
         'ticktext': daily_labels_kr, 
-        'tickangle': 0, 
-        'showgrid': True,
-        'zeroline': False,
-        'rangeselector': None, 
-        'rangeslider': {'visible': False}
+        'tickangle': 0
     },
-    margin=dict(t=30)
 )
 st.plotly_chart(fig, use_container_width=True)
 
@@ -302,6 +297,7 @@ new_city = st.text_input("지역 입력", city)
 if st.button("조회"):
     load_weather(new_city)
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
