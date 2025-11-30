@@ -35,7 +35,6 @@ def contains_hangul(text):
     return False
 
 # --- 세션 상태 초기화 및 데이터 가져오기 함수 (생략) ---
-# (이전 코드와 동일하므로 함수 정의 생략)
 
 def initialize_session_state():
     if 'search_performed' not in st.session_state:
@@ -87,11 +86,13 @@ def fetch_weather_data(city_name):
     st.session_state.search_performed = True
     st.rerun() 
 
-# --- 주간 날씨 분석 함수 (새로 추가) ---
+# --- 주간 날씨 분석 함수 (수정) ---
 def get_weekly_summary_text(daily_summary, pollution_response):
     
+    # daily_summary의 '최고온도', '최저온도'는 이미 float 형태임 (오류 해결)
+    
     # 1. 온도 분석 (주간 최고 온도 평균 기준)
-    avg_max_temp = daily_summary['최고온도'].str.replace('°', '').astype(float).mean()
+    avg_max_temp = daily_summary['최고온도'].mean()
     temp_advice = ""
     
     if avg_max_temp >= 27:
@@ -103,16 +104,23 @@ def get_weekly_summary_text(daily_summary, pollution_response):
     else: # avg_max_temp < 5
         temp_advice = "이번 주는 **날이 추워요**. 따뜻하고 두꺼운 외투와 방한용품을 챙겨주세요. 🥶"
 
-    # 2. 강수 분석 (강수확률 50% 이상인 날이 과반 기준)
+    # 2. 일교차 분석 (평균 일교차 기준)
+    daily_summary['일교차'] = daily_summary['최고온도'] - daily_summary['최저온도']
+    avg_temp_diff = daily_summary['일교차'].mean()
+    diff_advice = ""
+    
+    if avg_temp_diff >= 10:
+        diff_advice = f"🌡️ **일교차가 평균 {avg_temp_diff:.1f}°C**로 매우 커요. 얇은 옷을 여러 겹 껴입어 체온 조절에 신경 써주세요."
+
+    # 3. 강수 분석 (강수확률 50% 이상인 날이 과반 기준)
     total_days = len(daily_summary)
     rainy_days = daily_summary[daily_summary['평균강수확률'] >= 50.0].shape[0]
     rain_advice = ""
     
-    # 과반수 확인 (5일 예보 기준 3일 이상)
     if rainy_days >= (total_days / 2):
         rain_advice = "🌧️ **비 또는 눈 소식이 잦아요**. 외출 시 꼭 우산을 챙겨주세요."
         
-    # 3. 대기질 분석 (현재 AQI 기준)
+    # 4. 대기질 분석 (현재 AQI 기준)
     air_advice = ""
     if pollution_response and 'list' in pollution_response:
         aqi = pollution_response['list'][0]['main']['aqi']
@@ -121,9 +129,13 @@ def get_weekly_summary_text(daily_summary, pollution_response):
         if aqi >= 3: # 나쁨(3), 상당히 나쁨(4), 매우 나쁨(5)
             air_advice = f"😷 현재 **대기 질이 '{aqi_status_kr}' 수준**이에요. 외출 시 KF94 마스크를 챙겨주세요."
 
-    # 4. 종합 조언 생성
+    # 5. 종합 조언 생성
     summary_list = [temp_advice]
     
+    # 일교차 조언은 온도 조언보다 우선순위가 낮음 (온도 조언에 이미 포함될 수 있으므로)
+    if diff_advice:
+        summary_list.append(diff_advice)
+
     if rain_advice:
         summary_list.append(rain_advice)
     
@@ -134,7 +146,7 @@ def get_weekly_summary_text(daily_summary, pollution_response):
     if not rain_advice and not air_advice and 16 <= avg_max_temp < 27:
         summary_list.append("☀️ **맑고 좋은 날씨**가 예상되니, 즐거운 한 주 보내세요!")
         
-    return " ".join(summary_list)
+    return "\n\n".join(summary_list) # 줄바꿈 두 번으로 분리
 
 # --- Streamlit 앱 실행 ---
 
@@ -232,7 +244,7 @@ else:
     # 4. 일별 요약 (주간 예보)
     st.markdown("### 📅 주간 날씨 예보")
     
-    # 데이터프레임 생성 및 요일 한글화 (이전 코드와 동일)
+    # 데이터프레임 생성
     df_full = pd.DataFrame(
         [{
             '날짜/시간': pd.to_datetime(item['dt_txt']),
@@ -246,6 +258,7 @@ else:
         } for item in data['list']]
     )
     
+    # 일별 요약 (최고/최저 온도는 숫자(float)로 유지)
     daily_summary = df_full.groupby(df_full['날짜/시간'].dt.date).agg(
         요일=('요일', 'first'),
         최고온도=('최고온도_raw', np.max),
@@ -256,13 +269,13 @@ else:
     
     KOREAN_WEEKDAYS_MAP = {0: '월', 1: '화', 2: '수', 3: '목', 4: '금', 5: '토', 6: '일'}
     today = datetime.datetime.now().date()
-    daily_summary['평균강수확률'] = daily_summary['평균강수확률'].round(0) # 조언을 위해 반올림
+    daily_summary['평균강수확률'] = daily_summary['평균강수확률'].round(0) 
     daily_summary['요일'] = daily_summary['날짜/시간'].apply(lambda x: 
                                     '오늘' if x == today else 
                                     '내일' if x == today + datetime.timedelta(days=1) else 
                                     KOREAN_WEEKDAYS_MAP[x.weekday()])
 
-    # 주간 날씨 테이블 헤더 추가 (이전 코드와 동일)
+    # 주간 날씨 테이블 헤더 추가
     st.markdown(f"""
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; margin-bottom: 5px; font-weight: bold; color: #555;">
         <div style="width: 15%;">요일</div>
@@ -280,7 +293,7 @@ else:
         weather_icon_code = row['대표날씨_아이콘']
         avg_pop = row['평균강수확률']
         
-        # 데이터 행 (이전 코드와 동일)
+        # 데이터 행
         st.markdown(f"""
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
             <div style="width: 15%; font-weight: bold;">{day_label}</div>
@@ -294,7 +307,7 @@ else:
         """, unsafe_allow_html=True)
         st.markdown("---")
     
-    # 5. 5일 온도 변화 그래프 (이전 코드와 동일)
+    # 5. 5일 온도 변화 그래프 (생략)
     st.markdown("### 📈 5일 온도 변화 그래프")
     
     fig = go.Figure()
@@ -311,12 +324,8 @@ else:
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("---")
 
-    # --- 6. 주간 날씨 분석 및 조언 (새로 추가) ---
+    # --- 6. 주간 날씨 분석 및 조언 (수정된 get_weekly_summary_text 호출) ---
     st.markdown("### 💡 이번 주 날씨 조언")
-    
-    # daily_summary의 '최고온도'를 분석하기 위해 임시로 문자열을 숫자로 변환
-    daily_summary_temp = daily_summary.copy()
-    daily_summary_temp['최고온도'] = daily_summary_temp['최고온도'].astype(float) # 최고온도 타입을 float으로 변환
     
     summary_text = get_weekly_summary_text(daily_summary, pollution_response)
     
@@ -324,7 +333,7 @@ else:
     st.markdown("---")
     # -----------------------------------------------
         
-    # 7. 현재 위치 지도 (이전 코드와 동일)
+    # 7. 현재 위치 지도 (생략)
     lat = st.session_state.city_data['lat']
     lon = st.session_state.city_data['lon']
     
@@ -334,7 +343,7 @@ else:
     st.caption(f"**지도 중심 위치:** 위도 {lat:.2f}, 경도 {lon:.2f}")
     st.markdown("---")
 
-    # 8. 다른 지역 검색 (이전 코드와 동일)
+    # 8. 다른 지역 검색 (생략)
     st.markdown("### 📍 다른 지역 검색")
     
     new_city_name_input = st.text_input("새로운 지명 입력", display_city_name, key="new_city_input")
