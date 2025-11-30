@@ -108,7 +108,7 @@ def weekly_summary(df, air):
 # --- Streamlit 앱 시작 ---
 init_state()
 
-st.title("국내 날씨 / 미세먼지")
+st.title("오늘의 날씨는")
 
 if not st.session_state.searched:
     city_in = st.text_input("지역 입력", "서울")
@@ -181,17 +181,12 @@ with col2:
             st.markdown(f"**$\u2193$ {int(today_min)}°**")
     
     # 4. 체감온도 (굵기 통일 반영)
-    st.write(f"**체감 {int(fl)}°**")
+    st.write(f"**체감온도 {int(fl)}°**")
     
     # 5. 날짜요일, 시간 (굵기 통일 반영)
     st.write(f"**{current_date_time}**")
 
 st.divider() # 현재 날씨와 시간별 예보 구분
-
-
-# --- 시간별 예보 (HTML 제거, 기본 위젯 사용) ---
-# --- 시간별 예보 (HTML 제거, Streamlit 기본 위젯만 사용, 중앙 정렬) ---
-st.subheader("시간별 예보")
 
 tlist = w["list"][:8]
 
@@ -200,7 +195,6 @@ cols = st.columns(len(tlist), gap="small")
 
 for i, item in enumerate(tlist):
     with cols[i]:
-        # 각 컬럼을 하나의 컨테이너로 묶어 세로정렬을 균일하게 만듦
         with st.container():
             tt = pd.to_datetime(item["dt_txt"]).strftime("%H시")
             ti = item["main"]["temp"]
@@ -226,7 +220,7 @@ st.divider() # 시간별 예보와 대기질 구분
 
 
 # --- 대기질 ---
-st.subheader("대기질")
+st.subheader("미세먼지 농도")
 if air and "list" in air:
     info = air["list"][0]
     aqi = info["main"]["aqi"]
@@ -237,13 +231,10 @@ if air and "list" in air:
     st.write(f"AQI {em} | {txt}")
     st.write(f"PM2.5: {pm25:.1f}, PM10: {pm10:.1f}")
 else:
-    st.write("대기질 정보 없음.")
+    st.write("정보 없음.")
 
 st.divider() # 대기질과 주간 예보 구분
 
-
-# --- 주간 예보 ---
-st.subheader("주간 날씨 예보")
 
 # 헤더 출력
 header_cols = st.columns([1, 1, 1, 1, 1])
@@ -304,11 +295,7 @@ fig.update_layout(
 )
 st.plotly_chart(fig, use_container_width=True)
 
-st.divider() # 그래프와 주간 조언 구분
 
-
-# --- 주간 조언 ---
-st.subheader("주간 조언")
 st.info(weekly_summary(daily, air))
 
 st.divider() # 주간 조언과 다른 지역 조회 구분
@@ -317,15 +304,10 @@ st.divider() # 주간 조언과 다른 지역 조회 구분
 # --- 다른 지역 조회 ---
 st.subheader("다른 지역 조회")
 new_city = st.text_input("지역 입력", city)
-if st.button("조회 다시"):
+if st.button("조회"):
     load_weather(new_city)
-
-st.divider() # 다른 지역 조회와 지도 구분
-
-
-# --- 지도 ---
-st.subheader("위치 지도")
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
