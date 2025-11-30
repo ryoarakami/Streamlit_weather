@@ -206,7 +206,7 @@ for i, item in enumerate(tlist):
         
         # 2. 날씨 아이콘 (use_column_width="always"로 가운데 정렬 효과)
         # **를 제거하여 SyntaxError를 해결했습니다.
-        st.image(f"http://openweathermap.org/img/wn/{ic}.png", **width=30**, use_column_width="always") # <--- 이 줄이 수정되었습니다.
+        st.image(f"http://openweathermap.org/img/wn/{ic}.png", width=30, use_column_width="always") # <--- 이 줄이 수정되었습니다.
         
         # 3. 온도 (st.write와 볼드 마크다운)
         st.write(f"**{int(ti)}°**")
@@ -325,4 +325,5 @@ st.divider() # 다른 지역 조회와 지도 구분
 # --- 지도 ---
 st.subheader("위치 지도")
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
