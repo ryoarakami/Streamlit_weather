@@ -362,15 +362,8 @@ else:
     
     st.info(summary_text)
     st.markdown("---")
-        
-    # 7. 현재 위치 지도
-    st.markdown("### 🗺️ 현재 위치 지도")
-    map_data = pd.DataFrame({'lat': [lat], 'lon': [lon]})
-    st.map(map_data, zoom=10)
-    st.caption(f"**지도 중심 위치:** 위도 {lat:.2f}, 경도 {lon:.2f}")
-    st.markdown("---")
 
-    # 8. 다른 지역 검색
+    # 7. 다른 지역 검색
     st.markdown("### 📍 다른 지역 검색")
     
     new_city_name_input = st.text_input("새로운 지명 입력", city, key="new_city_input")
@@ -379,3 +372,10 @@ else:
             fetch_weather_data(new_city_name_input)
         else:
             st.warning("도시 이름을 입력해 주세요.")
+
+    # 8. 현재 위치 지도
+    st.markdown("### 🗺️ 현재 위치 지도")
+    map_data = pd.DataFrame({'lat': [lat], 'lon': [lon]})
+    st.map(map_data, zoom=10)
+    st.caption(f"**지도 중심 위치:** 위도 {lat:.2f}, 경도 {lon:.2f}")
+
