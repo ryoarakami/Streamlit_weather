@@ -73,7 +73,6 @@ def load_weather(city):
 
     ss.data = {"name": name_kr, "lat": lat, "lon": lon, "w": w, "air": air}
     ss.searched = True
-    # st.experimental_rerun() -> st.rerun()으로 수정
     st.rerun()
 
 def weekly_summary(df, air):
@@ -125,7 +124,7 @@ lat, lon = data["lat"], data["lon"]
 
 st.header(city)
 
-# 1. 주간 데이터 사전 계산 (오늘의 최고/최저 온도 추출 및 주간 예보용)
+# 1. 주간 데이터 사전 계산
 df = pd.DataFrame([{
     "dt": pd.to_datetime(x["dt_txt"]),
     "temp": x["main"]["temp"],
@@ -155,7 +154,7 @@ icon = fix_icon(now["weather"][0]["icon"])
 today_max = daily.loc[0, "최고"] if not daily.empty else None
 today_min = daily.loc[0, "최저"] if not daily.empty else None
 
-# 현재 날짜 및 시간 포맷팅 (요일 변환 오류 수정 적용)
+# 현재 날짜 및 시간 포맷팅
 current_dt = pd.to_datetime(now["dt_txt"])
 day_name_en = current_dt.strftime("%a")
 day_name = weekday_map.get(day_name_en, day_name_en) 
@@ -191,10 +190,10 @@ with col2:
 # --- 시간별 예보 (세로 배치 반영) ---
 st.subheader("시간별 예보")
 tlist = w["list"][:8]
-cols = st.columns(len(tlist)) # 8개의 열 생성
+cols = st.columns(len(tlist))
 
 for i, item in enumerate(tlist):
-    with cols[i]: # 각 열(column) 내부
+    with cols[i]:
         tt = pd.to_datetime(item["dt_txt"]).strftime("%H시")
         ti = item["main"]["temp"]
         p = item["pop"] * 100
@@ -238,7 +237,6 @@ with header_cols[1]: st.markdown("##### **강수량**")
 with header_cols[2]: st.markdown("##### **날씨**")
 with header_cols[3]: st.markdown("##### **최고온도**")
 with header_cols[4]: st.markdown("##### **최저온도**")
-# st.markdown("---") 제거
 
 # daily DataFrame의 요일 처리
 daily["요일"] = daily["날짜"].dt.strftime("%a").map(weekday_map).fillna(daily["날짜"].dt.strftime("%a"))
@@ -254,12 +252,38 @@ for _, row in daily.iterrows():
     with c5: st.write(f"{int(row['최저'])}°")
 # ---------------------------
 
-# 그래프
-st.subheader("온도 변화")
+# --- 그래프 (X축 한글 요일, 제목 간격 최소화 반영) ---
+# st.subheader 제거
+
+# X축 라벨을 위한 새로운 컬럼 생성
+df["요일_시간"] = df["dt"].dt.strftime("%H시").astype(str)
+df["요일_시간"] = df["dt"].dt.strftime("%a").map(weekday_map) + " " + df["요일_시간"]
+
+# 첫 번째 데이터 포인트만 '오늘'로 표시
+if not df.empty:
+    first_dt = df.loc[0, "dt"]
+    df.loc[0, "요일_시간"] = f"오늘 {first_dt.strftime('%H시')}"
+
+# Plotly 그래프 생성
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=df["dt"], y=df["temp"], mode="lines+markers", name="온도"))
-fig.add_trace(go.Scatter(x=df["dt"], y=df["feel"], mode="lines+markers", name="체감온도"))
+fig.add_trace(go.Scatter(x=df["요일_시간"], y=df["temp"], mode="lines+markers", name="온도"))
+fig.add_trace(go.Scatter(x=df["요일_시간"], y=df["feel"], mode="lines+markers", name="체감온도"))
+
+# Plotly 레이아웃 설정 (제목 추가 및 간격 최소화, X축 라벨 설정)
+fig.update_layout(
+    title={
+        'text': "온도 변화", 
+        'x': 0.05, 
+        'xanchor': 'left',
+        'y': 0.95, 
+        'yanchor': 'top',
+        'font': {'size': 24}
+    },
+    xaxis={'tickangle': 45, 'dtick': 4},
+    margin=dict(t=30)
+)
 st.plotly_chart(fig, use_container_width=True)
+# --------------------------------------------------
 
 # 주간 조언
 st.subheader("주간 조언")
