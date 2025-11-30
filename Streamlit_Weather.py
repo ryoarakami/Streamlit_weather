@@ -56,8 +56,6 @@ def init_state():
 #-----------------
 
 
-def has_kr(s):
-    return any(0xAC00 <= ord(c) <= 0xD7A3 for c in s)
 
 
 def load_weather(city):
@@ -328,6 +326,7 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
