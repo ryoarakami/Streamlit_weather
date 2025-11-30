@@ -221,7 +221,7 @@ else:
         st.warning("미세먼지 정보를 가져오는 데 실패했습니다.")
     st.markdown("---")
 
-    # 3. 시간별 예보 (생략)
+    # 3. 시간별 예보 (수정된 아이콘 대체 로직 적용)
     st.markdown("### ⏰ 시간별 예보")
     forecast_list_24hr = data['list'][:8]
     cols = st.columns(len(forecast_list_24hr))
@@ -230,6 +230,13 @@ else:
             time_str = pd.to_datetime(item['dt_txt']).tz_localize('UTC').tz_convert('Asia/Seoul').strftime('%H시')
             temp = item['main']['temp']
             weather_icon_code = item['weather'][0]['icon']
+            
+            # 짙은 구름 아이콘 (04d, 04n)을 구름 아이콘 (03d, 03n)으로 대체
+            if weather_icon_code == '04d':
+                weather_icon_code = '03d'
+            elif weather_icon_code == '04n':
+                weather_icon_code = '03n'
+
             pop = item['pop'] * 100
             st.markdown(f"""
             <div style="text-align: center; padding: 5px;">
@@ -291,6 +298,13 @@ else:
         max_t = row['최고온도']
         min_t = row['최저온도']
         weather_icon_code = row['대표날씨_아이콘']
+
+        # 짙은 구름 아이콘 (04d, 04n)을 구름 아이콘 (03d, 03n)으로 대체
+        if weather_icon_code == '04d':
+            weather_icon_code = '03d'
+        elif weather_icon_code == '04n':
+            weather_icon_code = '03n'
+
         avg_pop = row['평균강수확률']
         
         # 데이터 행
@@ -352,3 +366,4 @@ else:
             fetch_weather_data(new_city_name_input)
         else:
             st.warning("도시 이름을 입력해 주세요.")
+```http://googleusercontent.com/image_generation_content/1
