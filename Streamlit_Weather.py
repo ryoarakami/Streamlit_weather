@@ -7,9 +7,9 @@ import datetime
 
 # OpenWeatherMap API 설정 및 URL
 API_KEY = "f2907b0b1e074198de1ba6fb1928665f" 
-BASE_URL = "http://api.openweathermap.org/data/2.5/forecast"
-GEO_URL = "http://api.openweathermap.org/geo/1.0/direct"
-AIR_POLLUTION_URL = "http://api.openweathermap.org/data/2.5/air_pollution"
+BASE_URL = "[http://api.openweathermap.org/data/2.5/forecast](http://api.openweathermap.org/data/2.5/forecast)"
+GEO_URL = "[http://api.openweathermap.org/geo/1.0/direct](http://api.openweathermap.org/geo/1.0/direct)"
+AIR_POLLUTION_URL = "[http://api.openweathermap.org/data/2.5/air_pollution](http://api.openweathermap.org/data/2.5/air_pollution)"
 
 # --- 날씨 및 상태 정의 ---
 WEATHER_TRANSLATION = {
@@ -34,7 +34,7 @@ def contains_hangul(text):
             return True
     return False
 
-# --- 세션 상태 초기화 및 데이터 가져오기 함수 (생략) ---
+# --- 세션 상태 초기화 및 데이터 가져오기 함수 ---
 
 def initialize_session_state():
     if 'search_performed' not in st.session_state:
@@ -86,10 +86,8 @@ def fetch_weather_data(city_name):
     st.session_state.search_performed = True
     st.rerun() 
 
-# --- 주간 날씨 분석 함수 (수정) ---
+# --- 주간 날씨 분석 함수 ---
 def get_weekly_summary_text(daily_summary, pollution_response):
-    
-    # daily_summary의 '최고온도', '최저온도'는 이미 float 형태임 (오류 해결)
     
     # 1. 온도 분석 (주간 최고 온도 평균 기준)
     avg_max_temp = daily_summary['최고온도'].mean()
@@ -132,7 +130,6 @@ def get_weekly_summary_text(daily_summary, pollution_response):
     # 5. 종합 조언 생성
     summary_list = [temp_advice]
     
-    # 일교차 조언은 온도 조언보다 우선순위가 낮음 (온도 조언에 이미 포함될 수 있으므로)
     if diff_advice:
         summary_list.append(diff_advice)
 
@@ -146,7 +143,7 @@ def get_weekly_summary_text(daily_summary, pollution_response):
     if not rain_advice and not air_advice and 16 <= avg_max_temp < 27:
         summary_list.append("☀️ **맑고 좋은 날씨**가 예상되니, 즐거운 한 주 보내세요!")
         
-    return "\n\n".join(summary_list) # 줄바꿈 두 번으로 분리
+    return "\n\n".join(summary_list) 
 
 # --- Streamlit 앱 실행 ---
 
@@ -155,7 +152,7 @@ initialize_session_state()
 st.title("국내 날씨 및 미세먼지 예보 🌤️💨")
 st.markdown("---")
 
-# 1. 초기/상단 검색 UI (생략)
+# 1. 초기/상단 검색 UI
 if not st.session_state.search_performed:
     city_name_input = st.text_input("지명 입력", "서울", key="initial_city_input")
     if st.button("날씨 및 미세먼지 정보 가져오기 (검색)"):
@@ -164,17 +161,21 @@ if not st.session_state.search_performed:
         else:
             st.warning("도시 이름을 입력해 주세요.")
 else:
-    # 2. 검색 후 메인 UI 표시 (생략)
+    # 2. 검색 후 메인 UI 표시
     data = st.session_state.city_data['weather_data']
     pollution_response = st.session_state.city_data['pollution_response']
     display_city_name = st.session_state.city_data['display_city_name']
     
-    # 1. 상단 현재 날씨 정보 (생략)
+    # 1. 상단 현재 날씨 정보
+    st.markdown(f"## {display_city_name}")
+    
     current_weather = data['list'][0]
     current_temp = current_weather['main']['temp']
+    
     forecast_list_24hr = data['list'][:8] 
     min_temp = min(item['main']['temp_min'] for item in forecast_list_24hr)
     max_temp = max(item['main']['temp_max'] for item in forecast_list_24hr)
+    
     feels_like = current_weather['main']['feels_like']
     current_desc_en = current_weather['weather'][0]['description']
     current_desc_kr = WEATHER_TRANSLATION.get(current_desc_en, current_desc_en)
@@ -185,7 +186,7 @@ else:
     st.markdown(f"""
     <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px;">
         <h1 style="font-size: 5em; margin: 0;">{current_temp:.0f}°</h1>
-        <img src="http://openweathermap.org/img/wn/{weather_icon_code}@2x.png" alt="날씨 아이콘" style="width: 100px; height: 100px;"/>
+        <img src="[http://openweathermap.org/img/wn/](http://openweathermap.org/img/wn/){weather_icon_code}@2x.png" alt="날씨 아이콘" style="width: 100px; height: 100px;"/>
     </div>
     """, unsafe_allow_html=True)
     st.markdown(f"**{current_desc_kr}**")
@@ -194,7 +195,7 @@ else:
     st.markdown(f"{current_time_kst}")
     st.markdown("---")
     
-    # 2. 미세먼지 정보 (생략)
+    # 2. 미세먼지 정보 
     st.markdown("### 💨 현재 대기 질 정보")
     if pollution_response and 'list' in pollution_response:
         current_air = pollution_response['list'][0]
@@ -221,7 +222,7 @@ else:
         st.warning("미세먼지 정보를 가져오는 데 실패했습니다.")
     st.markdown("---")
 
-    # 3. 시간별 예보 (수정된 아이콘 대체 로직 적용)
+    # 3. 시간별 예보
     st.markdown("### ⏰ 시간별 예보")
     forecast_list_24hr = data['list'][:8]
     cols = st.columns(len(forecast_list_24hr))
@@ -241,7 +242,7 @@ else:
             st.markdown(f"""
             <div style="text-align: center; padding: 5px;">
                 <p style="font-weight: bold; margin-bottom: 5px;">{time_str}</p>
-                <img src="http://openweathermap.org/img/wn/{weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
+                <img src="[http://openweathermap.org/img/wn/](http://openweathermap.org/img/wn/){weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
                 <p style="font-size: 1.1em; margin-top: 5px; margin-bottom: 5px;">{temp:.0f}°</p>
                 <p style="font-size: 0.8em; color: #888; margin: 0;">💧 {pop:.0f}%</p>
             </div>
@@ -313,7 +314,7 @@ else:
             <div style="width: 15%; font-weight: bold;">{day_label}</div>
             <div style="width: 15%; text-align: left; font-size: 0.9em; color: #888;">💧 {avg_pop:.0f}%</div>
             <div style="width: 20%; text-align: center;">
-                <img src="http://openweathermap.org/img/wn/{weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
+                <img src="[http://openweathermap.org/img/wn/](http://openweathermap.org/img/wn/){weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
             </div>
             <div style="width: 25%; text-align: right; font-weight: bold;">{max_t:.0f}°</div>
             <div style="width: 25%; text-align: right; color: #888;">{min_t:.0f}°</div>
@@ -338,7 +339,7 @@ else:
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("---")
 
-    # --- 6. 주간 날씨 분석 및 조언 (수정된 get_weekly_summary_text 호출) ---
+    # --- 6. 주간 날씨 분석 및 조언 ---
     st.markdown("### 💡 이번 주 날씨 조언")
     
     summary_text = get_weekly_summary_text(daily_summary, pollution_response)
@@ -366,4 +367,3 @@ else:
             fetch_weather_data(new_city_name_input)
         else:
             st.warning("도시 이름을 입력해 주세요.")
-```http://googleusercontent.com/image_generation_content/1
