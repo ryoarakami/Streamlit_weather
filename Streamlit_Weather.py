@@ -5,15 +5,13 @@ import numpy as np
 import plotly.graph_objects as go 
 import datetime
 
-# OpenWeatherMap API 설정 및 URL (수정됨: 불필요한 문자를 제거하고 순수 URL만 남김)
+# OpenWeatherMap API 설정 및 URL
 API_KEY = "f2907b0b1e074198de1ba6fb1928665f" 
 BASE_URL = "http://api.openweathermap.org/data/2.5/forecast"
 GEO_URL = "http://api.openweathermap.org/geo/1.0/direct"
 AIR_POLLUTION_URL = "http://api.openweathermap.org/data/2.5/air_pollution"
 
-# --- (이하 코드는 이전과 동일) ---
-
-# --- 날씨 및 상태 정의 ---
+# --- 날씨 및 상태 정의 (생략) ---
 WEATHER_TRANSLATION = {
     "clear sky": "맑음", "few clouds": "구름 조금", "scattered clouds": "구름 많음",
     "broken clouds": "구름 낌", "overcast clouds": "흐림", "light rain": "약한 비",
@@ -36,8 +34,7 @@ def contains_hangul(text):
             return True
     return False
 
-# --- 세션 상태 초기화 및 데이터 가져오기 함수 ---
-
+# --- 세션 상태 및 데이터 가져오기 함수 (생략) ---
 def initialize_session_state():
     if 'search_performed' not in st.session_state:
         st.session_state.search_performed = False
@@ -88,7 +85,7 @@ def fetch_weather_data(city_name):
     st.session_state.search_performed = True
     st.rerun() 
 
-# --- 주간 날씨 분석 함수 ---
+# --- 주간 날씨 분석 함수 (생략) ---
 def get_weekly_summary_text(daily_summary, pollution_response):
     
     # 1. 온도 분석 (주간 최고 온도 평균 기준)
@@ -154,7 +151,7 @@ initialize_session_state()
 st.title("국내 날씨 및 미세먼지 예보 🌤️💨")
 st.markdown("---")
 
-# 1. 초기/상단 검색 UI
+# 1. 초기/상단 검색 UI (생략)
 if not st.session_state.search_performed:
     city_name_input = st.text_input("지명 입력", "서울", key="initial_city_input")
     if st.button("날씨 및 미세먼지 정보 가져오기 (검색)"):
@@ -163,7 +160,7 @@ if not st.session_state.search_performed:
         else:
             st.warning("도시 이름을 입력해 주세요.")
 else:
-    # 2. 검색 후 메인 UI 표시
+    # 2. 검색 후 메인 UI 표시 (생략)
     data = st.session_state.city_data['weather_data']
     pollution_response = st.session_state.city_data['pollution_response']
     display_city_name = st.session_state.city_data['display_city_name']
@@ -185,6 +182,13 @@ else:
     current_dt_utc = pd.to_datetime(current_weather['dt_txt']).tz_localize('UTC')
     current_time_kst = current_dt_utc.tz_convert('Asia/Seoul').strftime('%m월 %d일, 오후 %I:%M')
 
+    # 💥 현재 날씨 아이콘 통일 로직 적용
+    if weather_icon_code.endswith('n'):
+        weather_icon_code = weather_icon_code[:-1] + 'd'
+    if weather_icon_code == '04d':
+        weather_icon_code = '03d'
+    # ------------------------------------
+
     st.markdown(f"""
     <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px;">
         <h1 style="font-size: 5em; margin: 0;">{current_temp:.0f}°</h1>
@@ -197,7 +201,7 @@ else:
     st.markdown(f"{current_time_kst}")
     st.markdown("---")
     
-    # 2. 미세먼지 정보 
+    # 2. 미세먼지 정보 (생략)
     st.markdown("### 💨 현재 대기 질 정보")
     if pollution_response and 'list' in pollution_response:
         current_air = pollution_response['list'][0]
@@ -234,11 +238,12 @@ else:
             temp = item['main']['temp']
             weather_icon_code = item['weather'][0]['icon']
             
-            # 짙은 구름 아이콘 (04d, 04n)을 구름 아이콘 (03d, 03n)으로 대체
+            # 💥 시간별 예보 아이콘 통일 로직 적용
+            if weather_icon_code.endswith('n'):
+                weather_icon_code = weather_icon_code[:-1] + 'd'
             if weather_icon_code == '04d':
                 weather_icon_code = '03d'
-            elif weather_icon_code == '04n':
-                weather_icon_code = '03n'
+            # ------------------------------------
 
             pop = item['pop'] * 100
             st.markdown(f"""
@@ -268,7 +273,7 @@ else:
         } for item in data['list']]
     )
     
-    # 일별 요약 (최고/최저 온도는 숫자(float)로 유지)
+    # 일별 요약
     daily_summary = df_full.groupby(df_full['날짜/시간'].dt.date).agg(
         요일=('요일', 'first'),
         최고온도=('최고온도_raw', np.max),
@@ -302,11 +307,12 @@ else:
         min_t = row['최저온도']
         weather_icon_code = row['대표날씨_아이콘']
 
-        # 짙은 구름 아이콘 (04d, 04n)을 구름 아이콘 (03d, 03n)으로 대체
+        # 💥 주간 예보 아이콘 통일 로직 적용
+        if weather_icon_code.endswith('n'):
+            weather_icon_code = weather_icon_code[:-1] + 'd'
         if weather_icon_code == '04d':
             weather_icon_code = '03d'
-        elif weather_icon_code == '04n':
-            weather_icon_code = '03n'
+        # ------------------------------------
 
         avg_pop = row['평균강수확률']
         
@@ -341,14 +347,13 @@ else:
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("---")
 
-    # --- 6. 주간 날씨 분석 및 조언 ---
+    # 6. 주간 날씨 분석 및 조언
     st.markdown("### 💡 이번 주 날씨 조언")
     
     summary_text = get_weekly_summary_text(daily_summary, pollution_response)
     
     st.info(summary_text)
     st.markdown("---")
-    # -----------------------------------------------
         
     # 7. 현재 위치 지도 (생략)
     lat = st.session_state.city_data['lat']
