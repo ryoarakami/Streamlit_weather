@@ -205,7 +205,15 @@ else:
     icon = normalize_icon_code(current_weather['weather'][0]['icon'])
     
     current_dt_utc = pd.to_datetime(current_weather['dt_txt']).tz_localize('UTC')
-    current_time_kst = current_dt_utc.tz_convert('Asia/Seoul').strftime('%m월 %d일, 오후 %I:%M')
+    
+    # 요일 포함 시간 문자열 생성 로직
+    KOREAN_WEEKDAYS_MAP = {0: '월', 1: '화', 2: '수', 3: '목', 4: '금', 5: '토', 6: '일'}
+    weekday_kr = KOREAN_WEEKDAYS_MAP[current_dt_utc.tz_convert('Asia/Seoul').weekday()]
+    
+    # '11월 30일 일요일, 오후 06:00' 형식
+    current_time_kst_date = current_dt_utc.tz_convert('Asia/Seoul').strftime('%m월 %d일')
+    current_time_kst_time = current_dt_utc.tz_convert('Asia/Seoul').strftime('오후 %I:%M')
+    current_time_kst = f"{current_time_kst_date} {weekday_kr}요일, {current_time_kst_time}"
 
     st.markdown(f"""
     <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px;">
@@ -303,14 +311,14 @@ else:
                                    '내일' if x == today + datetime.timedelta(days=1) else 
                                    KOREAN_WEEKDAYS_MAP[x.weekday()])
 
-    # ★★★ 수정된 주간 날씨 테이블 헤더 ★★★
+    # ★★★ 수정된 주간 날씨 테이블 헤더 (날씨, 최고/최저 온도 글자 크기 키움) ★★★
     st.markdown(f"""
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 2px solid #333; margin-bottom: 5px; font-weight: bold; color: #000; font-size: 1.1em;">
         <div style="width: 15%; text-align: center;">요일</div>
         <div style="width: 15%; text-align: center;">강수확률</div>
-        <div style="width: 20%; text-align: center;">날씨</div>
-        <div style="width: 25%; text-align: center;">최고 온도</div>
-        <div style="width: 25%; text-align: center;">최저 온도</div>
+        <div style="width: 20%; text-align: center; font-size: 1.2em;">날씨</div>
+        <div style="width: 25%; text-align: center; font-size: 1.2em;">최고 온도</div>
+        <div style="width: 25%; text-align: center; font-size: 1.2em;">최저 온도</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -324,16 +332,16 @@ else:
 
         avg_pop = row['평균강수확률']
         
-        # ★★★ 수정된 데이터 행 ★★★
+        # ★★★ 수정된 데이터 행 (아이콘 크기 키우고, 최저 온도 볼드체 및 글자 크기 키움) ★★★
         st.markdown(f"""
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; color: #000; font-size: 1.1em;">
             <div style="width: 15%; font-weight: bold; text-align: center;">{day_label}</div>
             <div style="width: 15%; text-align: center;">💧 {avg_pop:.0f}%</div>
             <div style="width: 20%; text-align: center;">
-                <img src="http://openweathermap.org/img/wn/{weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
+                <img src="http://openweathermap.org/img/wn/{weather_icon_code}.png" alt="날씨 아이콘" style="width: 50px; height: 50px;"/>
             </div>
-            <div style="width: 25%; text-align: center; font-weight: bold;">{max_t:.0f}°</div>
-            <div style="width: 25%; text-align: center;">{min_t:.0f}°</div>
+            <div style="width: 25%; text-align: center; font-weight: bold; font-size: 1.2em;">{max_t:.0f}°</div>
+            <div style="width: 25%; text-align: center; font-weight: bold; font-size: 1.2em;">{min_t:.0f}°</div>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
