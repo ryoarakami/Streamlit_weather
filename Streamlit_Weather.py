@@ -161,11 +161,9 @@ day_name = weekday_map.get(day_name_en, day_name_en)
 current_date_time = current_dt.strftime(f"%m/%d({day_name}), %H시")
 
 
-# --- 현재 날씨 표시 (수정 반영) ---
+# --- 현재 날씨 표시 ---
 col1, col2 = st.columns([1,2])
 with col1:
-    # 요청하신 "날씨" 텍스트 추가
-    st.markdown("##### **날씨**") 
     st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=100)
 with col2:
     # 1. 현재 온도
@@ -191,7 +189,7 @@ with col2:
 st.divider() # 현재 날씨와 시간별 예보 구분
 
 
-# --- 시간별 예보 (SyntaxError 해결 및 width=30 반영) ---
+# --- 시간별 예보 (HTML 제거, 기본 위젯 사용) ---
 st.subheader("시간별 예보")
 tlist = w["list"][:8]
 cols = st.columns(len(tlist))
@@ -206,15 +204,16 @@ for i, item in enumerate(tlist):
         # 1. 시간 (st.caption으로 작은 글씨)
         st.caption(tt)
         
-        # 2. 날씨 아이콘 (width=30으로 수정하고 ** 제거)
-        st.image(f"http://openweathermap.org/img/wn/{ic}.png", width=30, use_column_width="always")
+        # 2. 날씨 아이콘 (use_column_width="always"로 가운데 정렬 효과)
+        # **를 제거하여 SyntaxError를 해결했습니다.
+        st.image(f"http://openweathermap.org/img/wn/{ic}.png", width=30, use_column_width="always") # <--- 이 줄이 수정되었습니다.
         
         # 3. 온도 (st.write와 볼드 마크다운)
         st.write(f"**{int(ti)}°**")
         
         # 4. 강수량 (💧 이모지와 함께, st.caption으로 작은 글씨)
         st.caption(f"💧 {int(p)}%")
-
+        
 st.divider() # 시간별 예보와 대기질 구분
 
 
@@ -316,3 +315,14 @@ st.divider() # 주간 조언과 다른 지역 조회 구분
 
 # --- 다른 지역 조회 ---
 st.subheader("다른 지역 조회")
+new_city = st.text_input("지역 입력", city)
+if st.button("조회 다시"):
+    load_weather(new_city)
+
+st.divider() # 다른 지역 조회와 지도 구분
+
+
+# --- 지도 ---
+st.subheader("위치 지도")
+st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
