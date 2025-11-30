@@ -282,20 +282,13 @@ unique_dates = sorted(df['dt'].dt.date.unique())
 daily_tick_points = [datetime.datetime.combine(d, datetime.time(12, 0)) for d in unique_dates]
 
 # Plotly 그래프 생성
+st.subheader("이번주 온도")
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=df["dt"], y=df["temp"], mode="lines+markers", name="온도"))
 fig.add_trace(go.Scatter(x=df["dt"], y=df["feel"], mode="lines+markers", name="체감온도"))
 
 # Plotly 레이아웃 설정 (X축 수평, 요일 라벨, 간격 조정 적용)
 fig.update_layout(
-    title={
-        'text': "온도 변화", 
-        'x': 0.05, 
-        'xanchor': 'left',
-        'y': 0.95, 
-        'yanchor': 'top',
-        'font': {'size': 24}
-    },
     xaxis={
         'type': 'date', 
         'tickmode': 'array',
@@ -333,5 +326,6 @@ st.divider() # 다른 지역 조회와 지도 구분
 # --- 지도 ---
 st.subheader("위치 지도")
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
