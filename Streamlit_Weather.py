@@ -260,12 +260,16 @@ daily_labels_kr = [weekday_map.get(d, d) for d in daily_labels_en]
 if daily_labels_kr:
     daily_labels_kr[0] = '오늘'
 
+# 각 날짜의 12:00를 tickvals로 사용
+unique_dates = sorted(df['dt'].dt.date.unique())
+daily_tick_points = [datetime.datetime.combine(d, datetime.time(12, 0)) for d in unique_dates]
+
 # Plotly 그래프 생성
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=df["dt"], y=df["temp"], mode="lines+markers", name="온도"))
 fig.add_trace(go.Scatter(x=df["dt"], y=df["feel"], mode="lines+markers", name="체감온도"))
 
-# Plotly 레이아웃 설정 (제목, X축 수평 표시 적용)
+# Plotly 레이아웃 설정 (제목, X축 수평 표시, 간격 조정 적용)
 fig.update_layout(
     title={
         'text': "온도 변화", 
@@ -278,11 +282,13 @@ fig.update_layout(
     xaxis={
         'type': 'date', 
         'tickmode': 'array',
-        'tickvals': daily_start,      
+        'tickvals': daily_tick_points, # 각 날짜의 정오를 라벨 위치로 사용
         'ticktext': daily_labels_kr,  
         'tickangle': 0,               # 수평 표시
         'showgrid': True,
-        'zeroline': False
+        'zeroline': False,
+        'rangeselector': None,        
+        'rangeslider': {'visible': False}
     },
     margin=dict(t=30)
 )
