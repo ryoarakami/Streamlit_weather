@@ -5,11 +5,13 @@ import numpy as np
 import plotly.graph_objects as go 
 import datetime
 
-# OpenWeatherMap API 설정 및 URL
+# OpenWeatherMap API 설정 및 URL (수정됨: 불필요한 문자를 제거하고 순수 URL만 남김)
 API_KEY = "f2907b0b1e074198de1ba6fb1928665f" 
-BASE_URL = "[http://api.openweathermap.org/data/2.5/forecast](http://api.openweathermap.org/data/2.5/forecast)"
-GEO_URL = "[http://api.openweathermap.org/geo/1.0/direct](http://api.openweathermap.org/geo/1.0/direct)"
-AIR_POLLUTION_URL = "[http://api.openweathermap.org/data/2.5/air_pollution](http://api.openweathermap.org/data/2.5/air_pollution)"
+BASE_URL = "http://api.openweathermap.org/data/2.5/forecast"
+GEO_URL = "http://api.openweathermap.org/geo/1.0/direct"
+AIR_POLLUTION_URL = "http://api.openweathermap.org/data/2.5/air_pollution"
+
+# --- (이하 코드는 이전과 동일) ---
 
 # --- 날씨 및 상태 정의 ---
 WEATHER_TRANSLATION = {
@@ -186,7 +188,7 @@ else:
     st.markdown(f"""
     <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px;">
         <h1 style="font-size: 5em; margin: 0;">{current_temp:.0f}°</h1>
-        <img src="[http://openweathermap.org/img/wn/](http://openweathermap.org/img/wn/){weather_icon_code}@2x.png" alt="날씨 아이콘" style="width: 100px; height: 100px;"/>
+        <img src="http://openweathermap.org/img/wn/{weather_icon_code}@2x.png" alt="날씨 아이콘" style="width: 100px; height: 100px;"/>
     </div>
     """, unsafe_allow_html=True)
     st.markdown(f"**{current_desc_kr}**")
@@ -242,7 +244,7 @@ else:
             st.markdown(f"""
             <div style="text-align: center; padding: 5px;">
                 <p style="font-weight: bold; margin-bottom: 5px;">{time_str}</p>
-                <img src="[http://openweathermap.org/img/wn/](http://openweathermap.org/img/wn/){weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
+                <img src="http://openweathermap.org/img/wn/{weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
                 <p style="font-size: 1.1em; margin-top: 5px; margin-bottom: 5px;">{temp:.0f}°</p>
                 <p style="font-size: 0.8em; color: #888; margin: 0;">💧 {pop:.0f}%</p>
             </div>
@@ -314,7 +316,7 @@ else:
             <div style="width: 15%; font-weight: bold;">{day_label}</div>
             <div style="width: 15%; text-align: left; font-size: 0.9em; color: #888;">💧 {avg_pop:.0f}%</div>
             <div style="width: 20%; text-align: center;">
-                <img src="[http://openweathermap.org/img/wn/](http://openweathermap.org/img/wn/){weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
+                <img src="http://openweathermap.org/img/wn/{weather_icon_code}.png" alt="날씨 아이콘" style="width: 40px; height: 40px;"/>
             </div>
             <div style="width: 25%; text-align: right; font-weight: bold;">{max_t:.0f}°</div>
             <div style="width: 25%; text-align: right; color: #888;">{min_t:.0f}°</div>
