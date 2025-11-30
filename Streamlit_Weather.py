@@ -11,7 +11,7 @@ BASE_URL = "http://api.openweathermap.org/data/2.5/forecast"
 GEO_URL = "http://api.openweathermap.org/geo/1.0/direct"
 AIR_POLLUTION_URL = "http://api.openweathermap.org/data/2.5/air_pollution"
 
-# --- 날씨 및 상태 정의 (생략) ---
+# --- 날씨 및 상태 정의 ---
 WEATHER_TRANSLATION = {
     "clear sky": "맑음", "few clouds": "구름 조금", "scattered clouds": "구름 많음",
     "broken clouds": "구름 낌", "overcast clouds": "흐림", "light rain": "약한 비",
@@ -47,6 +47,24 @@ def normalize_icon_code(code):
         code = '03d'
 
     return code
+
+# --- 요일 한글 변환 맵 ---
+KOREAN_WEEKDAYS_MAP = {
+    0: '월', 1: '화', 2: '수', 3: '목', 4: '금', 5: '토', 6: '일'
+}
+
+def get_korean_weekday(date_str):
+    date_obj = pd.to_datetime(date_str)
+    today = datetime.datetime.now().date()
+    
+    if date_obj.date() == today:
+        return '오늘'
+    elif date_obj.date() == today + datetime.timedelta(days=1):
+        return '내일'
+    else:
+        # date.weekday()는 월(0) ~ 일(6) 반환
+        return KOREAN_WEEKDAYS_MAP[date_obj.weekday()]
+
 
 # --- 세션 상태 초기화 및 데이터 가져오기 함수 (생략) ---
 
@@ -100,7 +118,7 @@ def fetch_weather_data(city_name):
     st.session_state.search_performed = True
     st.rerun() 
 
-# --- 주간 날씨 분석 함수 (생략) ---
+# --- 주간 날씨 분석 함수 (이전 코드와 동일, 데이터프레임 구조 변경으로 인해 내부 로직은 유지) ---
 def get_weekly_summary_text(daily_summary, pollution_response):
     
     # 1. 온도 분석 (주간 최고 온도 평균 기준)
@@ -126,7 +144,14 @@ def get_weekly_summary_text(daily_summary, pollution_response):
 
     # 3. 강수 분석 (강수확률 50% 이상인 날이 과반 기준)
     total_days = len(daily_summary)
-    rainy_days = daily_summary[daily_summary['평균강수확률'] >= 50.0].shape[0]
+    # daily_summary['평균강수확률']를 계산해야 함 (아래에서 다시 계산함)
+    
+    # *임시로 강수확률을 float으로 재계산*
+    daily_summary_temp = daily_summary.copy()
+    daily_summary_temp['평균강수확률'] = daily_summary_temp['평균강수확률'].apply(lambda x: x if isinstance(x, (int, float)) else np.nan)
+    daily_summary_temp.dropna(subset=['평균강수확률'], inplace=True)
+
+    rainy_days = daily_summary_temp[daily_summary_temp['평균강수확률'] >= 50.0].shape[0]
     rain_advice = ""
     
     if rainy_days >= (total_days / 2):
@@ -179,24 +204,19 @@ else:
     pollution_response = st.session_state.city_data['pollution_response']
     display_city_name = st.session_state.city_data['display_city_name']
     
-    # 1. 상단 현재 날씨 정보 (아이콘 통일 로직 적용)
-    st.markdown(f"## {display_city_name}")
-    
+    # 1. 상단 현재 날씨 정보
     current_weather = data['list'][0]
     current_temp = current_weather['main']['temp']
-    
     forecast_list_24hr = data['list'][:8] 
     min_temp = min(item['main']['temp_min'] for item in forecast_list_24hr)
     max_temp = max(item['main']['temp_max'] for item in forecast_list_24hr)
-    
     feels_like = current_weather['main']['feels_like']
     current_desc_en = current_weather['weather'][0]['description']
     current_desc_kr = WEATHER_TRANSLATION.get(current_desc_en, current_desc_en)
     weather_icon_code = current_weather['weather'][0]['icon']
     current_dt_utc = pd.to_datetime(current_weather['dt_txt']).tz_localize('UTC')
     current_time_kst = current_dt_utc.tz_convert('Asia/Seoul').strftime('%m월 %d일, 오후 %I:%M')
-    
-    weather_icon_code = normalize_icon_code(weather_icon_code) # 아이콘 통일
+    weather_icon_code = normalize_icon_code(weather_icon_code)
 
     st.markdown(f"""
     <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px; color: #333; font-size: 1.2em;">
@@ -246,11 +266,8 @@ else:
             time_str = pd.to_datetime(item['dt_txt']).tz_localize('UTC').tz_convert('Asia/Seoul').strftime('%H시')
             temp = item['main']['temp']
             weather_icon_code = item['weather'][0]['icon']
-            
-            weather_icon_code = normalize_icon_code(weather_icon_code) # 아이콘 통일
-
+            weather_icon_code = normalize_icon_code(weather_icon_code) 
             pop = item['pop'] * 100
-            # 폰트 크기 증가 및 색상 통일 (중앙 정렬 유지)
             st.markdown(f"""
             <div style="text-align: center; padding: 5px; color: #333; font-size: 1.1em;">
                 <p style="font-weight: bold; margin-bottom: 5px;">{time_str}</p>
@@ -262,134 +279,80 @@ else:
     st.markdown("---")
     
     # 4. 일별 요약 (주간 예보)
-    st.markdown("### 📅 주간 날씨 예보")
-    
-    # 데이터프레임 생성
-    df_full = pd.DataFrame(
-        [{
-            '날짜/시간': pd.to_datetime(item['dt_txt']),
-            '요일': pd.to_datetime(item['dt_txt']).tz_localize('UTC').tz_convert('Asia/Seoul').strftime('%a'), 
-            '예상온도 (°C)': item['main']['temp'],
-            '체감온도 (°C)': item['main']['feels_like'],
-            '최저온도_raw': item['main']['temp_min'],
-            '최고온도_raw': item['main']['temp_max'],
-            '날씨_아이콘': item['weather'][0]['icon'],
-            '강수확률': item['pop'] * 100
-        } for item in data['list']]
-    )
-    
-    # 일별 요약 (최고/최저 온도는 숫자(float)로 유지)
-    daily_summary = df_full.groupby(df_full['날짜/시간'].dt.date).agg(
-        요일=('요일', 'first'),
-        최고온도=('최고온도_raw', np.max),
-        최저온도=('최저온도_raw', np.min),
-        평균강수확률=('강수확률', np.mean),
-    ).reset_index()
     
     # ************************************************************
-    # 데이터 안정화를 위해 오전/오후 아이콘 추출 로직을 분리하여 적용
+    # 💥 주간 예보 로직을 요청하신 HTML 테이블 구조로 완전히 대체합니다. 
     # ************************************************************
     
-    # 오전/오후 아이콘 컬럼 추가
-    daily_summary['오전_아이콘'] = ''
-    daily_summary['오후_아이콘'] = ''
+    weekly_forecast = data['list']
     
-    for date in daily_summary['날짜/시간']:
-        # 해당 날짜의 데이터 필터링
-        day_data = df_full[df_full['날짜/시간'].dt.date == date]
+    # 날짜 단위로 묶기
+    daily_data = {}
+    for entry in weekly_forecast:
+        date = entry['dt_txt'].split(" ")[0]
         
-        # 09시 아이콘 찾기 (오전 대표)
-        morning_icon = day_data[day_data['날짜/시간'].dt.time == datetime.time(9, 0, 0)]['날씨_아이콘']
-        if morning_icon.empty and not day_data['날씨_아이콘'].empty:
-            morning_icon = day_data['날씨_아이콘'].mode()
-        
-        # 15시 아이콘 찾기 (오후 대표)
-        afternoon_icon = day_data[day_data['날짜/시간'].dt.time == datetime.time(15, 0, 0)]['날씨_아이콘']
-        if afternoon_icon.empty and not day_data['날씨_아이콘'].empty:
-            afternoon_icon = day_data['날씨_아이콘'].mode()
-            
-        # 결과 반영
-        idx = daily_summary[daily_summary['날짜/시간'] == date].index
-        if not morning_icon.empty and morning_icon.shape[0] > 0 and idx.shape[0] > 0:
-            daily_summary.loc[idx[0], '오전_아이콘'] = morning_icon.iloc[0]
-        
-        if not afternoon_icon.empty and afternoon_icon.shape[0] > 0 and idx.shape[0] > 0:
-            daily_summary.loc[idx[0], '오후_아이콘'] = afternoon_icon.iloc[0]
+        if date not in daily_data:
+            daily_data[date] = []
+        daily_data[date].append(entry)
 
-    # ************************************************************
-    
-    KOREAN_WEEKDAYS_MAP = {0: '월', 1: '화', 2: '수', 3: '목', 4: '금', 5: '토', 6: '일'}
-    today = datetime.datetime.now().date()
-    daily_summary['평균강수확률'] = daily_summary['평균강수확률'].round(0) 
-    daily_summary['요일'] = daily_summary['날짜/시간'].apply(lambda x: 
-                                    '오늘' if x == today else 
-                                    '내일' if x == today + datetime.timedelta(days=1) else 
-                                    KOREAN_WEEKDAYS_MAP[x.weekday()])
-
-    # --- 주간 날씨 테이블 헤더 추가 ---
-    # 이 헤더는 HTML이므로 st.markdown(..., unsafe_allow_html=True)로 출력
-    header_html = f"""
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; margin-bottom: 5px; font-weight: bold; color: #333; font-size: 1.2em; text-align: center;">
-        <div style="width: 15%; margin: auto;">요일</div>
-        <div style="width: 15%; margin: auto;">강수확률</div>
-        <div style="width: 20%; margin: auto;">날씨</div>
-        <div style="width: 25%; margin: auto;">최고 온도</div>
-        <div style="width: 25%; margin: auto;">최저 온도</div>
-    </div>
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 0 5px 0; border-bottom: 1px solid #ddd; font-weight: normal; color: #555; font-size: 1em; text-align: center;">
-        <div style="width: 15%;"></div>
-        <div style="width: 15%;"></div>
-        <div style="width: 20%; display: flex; justify-content: space-around;">
-            <div style="width: 50%;">오전</div> 
-            <div style="width: 50%;">오후</div>
-        </div>
-        <div style="width: 25%;"></div>
-        <div style="width: 25%;"></div>
-    </div>
+    # HTML 테이블 시작
+    weekly_html = """
+    <h3 style="margin-top: 40px; color: #333;">📅 주간 날씨 예보</h3>
+    <table style="width: 100%; text-align: center; border-collapse: collapse; font-size: 1.2em;">
+    <tr style="font-weight: bold; border-bottom: 2px solid #ddd; color: #333;">
+    <td>요일</td><td>강수확률</td><td>날씨</td><td>최고 온도</td><td>최저 온도</td>
+    </tr>
     """
-    st.markdown(header_html, unsafe_allow_html=True)
-    # ---------------------------------------------
 
-    data_rows_html = []
-    for index, row in daily_summary.iterrows():
-        day_label = row['요일']
-        max_t = row['최고온도']
-        min_t = row['최저온도']
-        avg_pop = row['평균강수확률']
+    data_for_analysis = [] # 분석을 위한 데이터 저장소
+
+    for date, items in list(daily_data.items())[:5]:  # 5일만 표시
+        temps = [item['main']['temp'] for item in items]
+        pops = [item.get('pop', 0) * 100 for item in items]
         
-        # 아이콘 코드 통일 로직 적용
-        morning_icon = normalize_icon_code(row['오전_아이콘'])
-        afternoon_icon = normalize_icon_code(row['오후_아이콘'])
+        # 대표 아이콘은 첫 3시간 예보(00시) 기준으로 사용 (단순화)
+        icon_code_raw = items[0]['weather'][0]['icon']
+        icon_code = normalize_icon_code(icon_code_raw)
         
-        # 데이터 행 (하나의 문자열로 생성)
-        row_html = f"""
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; color: #333; font-size: 1.3em; text-align: center;">
-            <div style="width: 15%; font-weight: bold; margin: auto;">{day_label}</div>
-            <div style="width: 15%; margin: auto; font-size: 1.1em; color: #555;">💧 {avg_pop:.0f}%</div>
-            
-            <div style="width: 20%; display: flex; justify-content: space-around; align-items: center;">
-                <div style="width: 50%;">
-                    <img src="http://openweathermap.org/img/wn/{morning_icon}.png" alt="오전 날씨" style="width: 40px; height: 40px;"/>
-                </div>
-                <div style="width: 50%;">
-                    <img src="http://openweathermap.org/img/wn/{afternoon_icon}.png" alt="오후 날씨" style="width: 40px; height: 40px;"/>
-                </div>
-            </div>
-            
-            <div style="width: 25%; font-weight: bold; margin: auto;">{max_t:.0f}°</div>
-            <div style="width: 25%; margin: auto; color: #555;">{min_t:.0f}°</div>
-        </div>
-        <hr style="margin: 0; border-top: 1px solid #eee;">
+        weather_desc = items[0]['weather'][0]['description']
+        weather_desc_kr = WEATHER_TRANSLATION.get(weather_desc, weather_desc)
+
+        # 요일 및 오늘/내일 변환
+        weekday_label = get_korean_weekday(date)
+        
+        weekly_html += f"""
+        <tr style="border-bottom: 1px solid #eee; color: #333;">
+            <td style="font-weight: bold;">{weekday_label}</td>
+            <td style="color: #555;">💧 {int(np.mean(pops))}%</td>
+            <td>
+                <img src="http://openweathermap.org/img/wn/{icon_code}.png" style="width: 40px;">
+                <div style="font-size: 0.8em; color: #555;">{weather_desc_kr}</div>
+            </td>
+            <td style="font-weight: bold;">{max(temps):.0f}°</td>
+            <td style="color: #555;">{min(temps):.0f}°</td>
+        </tr>
         """
-        data_rows_html.append(row_html)
-    
-    # 💥 반복문 밖에서 한 번에 출력하여 안정화
-    st.markdown("".join(data_rows_html), unsafe_allow_html=True) 
-    
+        
+        # 분석을 위해 필요한 데이터만 저장
+        data_for_analysis.append({
+            '최고온도': max(temps),
+            '최저온도': min(temps),
+            '평균강수확률': np.mean(pops)
+        })
+        
+    weekly_html += "</table>"
+    st.markdown(weekly_html, unsafe_allow_html=True)
     st.markdown("---")
+    
+    # ************************************************************
     
     # 5. 5일 온도 변화 그래프 (생략)
     st.markdown("### 📈 5일 온도 변화 그래프")
+    
+    df_full = pd.DataFrame(data['list']) # 그래프를 위해 df_full 재생성
+    df_full['날짜/시간'] = pd.to_datetime(df_full['dt_txt'])
+    df_full['예상온도 (°C)'] = [item['main']['temp'] for item in data['list']]
+    df_full['체감온도 (°C)'] = [item['main']['feels_like'] for item in data['list']]
     
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df_full['날짜/시간'], y=df_full['예상온도 (°C)'], 
@@ -408,7 +371,10 @@ else:
     # 6. 주간 날씨 분석 및 조언
     st.markdown("### 💡 이번 주 날씨 조언")
     
-    summary_text = get_weekly_summary_text(daily_summary, pollution_response)
+    # 분석 함수를 위해 daily_summary_temp를 다시 구성
+    daily_summary_temp = pd.DataFrame(data_for_analysis)
+    
+    summary_text = get_weekly_summary_text(daily_summary_temp, pollution_response)
     
     st.info(summary_text)
     st.markdown("---")
