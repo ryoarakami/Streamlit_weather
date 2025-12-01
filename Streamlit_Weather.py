@@ -218,19 +218,19 @@ st.divider()
 #-----------------시간별 예보
 
 
-todaylist = weather["list"][:8]
-cols = st.columns(len(todaylist))
+today = weather["list"][:8]
+cols = st.columns(len(today))
 
-for i, item in enumerate(todaylist):
+for i, item in enumerate(today):
     with cols[i]:
-        tt = pd.to_datetime(item["dt_txt"]).strftime("%H시")
-        ti = item["main"]["temp"]
+        t = pd.to_datetime(item["dt_txt"]).strftime("%H시")
+        i = item["main"]["temp"]
         p = item["pop"] * 100
-        ic = fix_icon(item["weather"][0]["icon"])
+        c = fix_icon(item["weather"][0]["icon"])
 
-        st.caption(tt)
-        st.image(f"http://openweathermap.org/img/wn/{ic}.png", width=40)
-        st.markdown(f"**{int(ti)}°**")
+        st.caption(t)
+        st.image(f"http://openweathermap.org/img/wn/{c}.png", width=40)
+        st.markdown(f"**{int(i)}°**")
         st.caption(f"💧 {int(p)}%")
 
 
