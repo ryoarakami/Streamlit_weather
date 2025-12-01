@@ -259,7 +259,7 @@ st.divider()
 def render_daily_row(row):
     cols = st.columns([1, 1, 1, 1, 1])
     cols[0].write(row["요일"])
-    cols[1].write(f"{int(row['강수'])}%")
+    cols[1].write(f"💧{int(row['강수'])}%")
     cols[2].image(f"http://openweathermap.org/img/wn/{fix_icon(row['아이콘'])}.png", width=35)
     cols[3].write(f"**{int(row['최고'])}°**")
     cols[4].write(f"{int(row['최저'])}°")
@@ -324,6 +324,7 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
