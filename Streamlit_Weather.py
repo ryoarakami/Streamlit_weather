@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import datetime
+import matplotlib.pyplot as plt 
+import datetime
 
 API_KEY = st.secrets["api_keys"]["openweathermap"]
 
@@ -298,16 +300,41 @@ for i, d in enumerate(unique_dates):
 
 
 st.subheader("이번주 온도 변화")
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=forecast_df["dt"], y=forecast_df["temp"], mode="lines+markers", name="온도"))
-fig.add_trace(go.Scatter(x=forecast_df["dt"], y=forecast_df["feel"], mode="lines+markers", name="체감온도"))
 
-fig.update_layout(
-    xaxis={'type': 'date', 'tickmode': 'array', 'tickvals': tick_points, 'ticktext': tick_labels},
-    margin=dict(t=30)
+# 1. Matplotlib Figure와 Axes 생성
+fig, ax = plt.subplots(figsize=(10, 4))
+
+# 2. 온도 (temp) 플롯 추가
+ax.plot(
+    forecast_df["dt"], 
+    forecast_df["temp"], 
+    marker="o", 
+    linestyle="-", 
+    label="온도",
+    color='blue'
 )
 
-st.plotly_chart(fig, use_container_width=True)
+# 3. 체감온도 (feel) 플롯 추가
+ax.plot(
+    forecast_df["dt"], 
+    forecast_df["feel"], 
+    marker="x", 
+    linestyle="--", 
+    label="체감온도",
+    color='orange'
+)
+
+# 4. 축 및 범례 설정 (날짜 축 라벨은 기존 코드를 활용)
+ax.set_xticks(tick_points)
+ax.set_xticklabels(tick_labels)
+ax.set_xlabel("요일")
+ax.set_ylabel("온도 (°C)")
+ax.set_title(f"{city} 이번주 온도 변화", fontsize=14)
+ax.grid(True, linestyle='--', alpha=0.6)
+ax.legend(loc='upper right')
+
+# 5. Streamlit에 Matplotlib 그래프 표시
+st.pyplot(fig) # ⬅️ st.plotly_chart 대신 st.pyplot 사용
 
 st.info(weekly_summary(daily_df, air_quality))
 
@@ -324,6 +351,7 @@ if st.button("조회"):
     load_weather(new_city)
 
 st.map(pd.DataFrame({"lat": [lat], "lon": [lon]}))
+
 
 
 
